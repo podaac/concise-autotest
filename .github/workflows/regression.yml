@@ -4,8 +4,8 @@ name: Regression
 
 on:
 
-  schedule:
-    - cron: '0 8 1-31/3 * *'
+#  schedule:
+#    - cron: '0 8 1-31/3 * *'
 
   workflow_dispatch:
 

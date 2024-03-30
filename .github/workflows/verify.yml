@@ -1,8 +1,8 @@
 # This workflow ...
 name: Verify New Associations
 on:
-  pull_request:
-    types: [ synchronize ]
+#  pull_request:
+#    types: [ synchronize ]
 
 jobs:
   verify_collection:

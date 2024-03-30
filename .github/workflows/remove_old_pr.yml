@@ -2,8 +2,8 @@
 name: Remove PR old association
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 11 2-31/3 * *'
+#  schedule:
+#    - cron: '0 11 2-31/3 * *'
 
 jobs:
   find_new:

@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "l2ss-py-autotest"
+name = "concise-autotest"
 version = "0.1.0"
-description = "Automated tests for new associations to l2ss-py service"
+description = "Automated tests for new associations to concise service"
 authors = ["PO.DAAC <podaac@jpl.nasa.gov>"]
 license = "Apache 2.0"
 readme = "README.md"
-packages = [{include = "l2ss_py_autotest"}]
+packages = [{include = "concise_autotest"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -34,4 +34,4 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-cmr_association_diff = "l2ss_py_autotest.cmr_association_diff:run"
+cmr_association_diff = "concise_autotest.cmr_association_diff:run"

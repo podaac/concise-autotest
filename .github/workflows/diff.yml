@@ -1,5 +1,5 @@
 # Run every third day starting from the 2nd of the month 1 am pacific 
-# check for new collection associations to the l2ss-py UMM-S record
+# check for new collection associations to the concise UMM-S record
 # in UAT and OPS. If a new association is found, a PR is opened to add the new collection concept id to the
 # cmr/concise/*_associations.txt file.
 
@@ -80,7 +80,7 @@ jobs:
           delete-branch: true
           title: UAT ${{ matrix.data.concept_id }} (${{ matrix.data.short_name }})
           body: |
-            New association between l2ss-py and ${{ matrix.data.concept_id }} found in UAT.
+            New association between concise and ${{ matrix.data.concept_id }} found in UAT.
             Beginning verification of collection.
           labels: |
             unverified
@@ -125,7 +125,7 @@ jobs:
           delete-branch: true
           title: OPS ${{ matrix.data.concept_id }} (${{ matrix.data.short_name }})
           body: |
-            New association between l2ss-py and ${{ matrix.data.concept_id }} found in OPS.
+            New association between concise and ${{ matrix.data.concept_id }} found in OPS.
             Beginning verification of collection.
           labels: |
             unverified

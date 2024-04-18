@@ -1,8 +1,8 @@
-# l2ss-py-autotest
+# concise-autotest
 
-This repository contains functional/integration tests for l2ss-py. It also includes github
+This repository contains functional/integration tests for concise. It also includes github
 action workflows for automatically running these tests whenever a new collection gets
-associated to the l2ss-py UMM-S record.
+associated to the concise UMM-S record.
 
 ## How it works
 
@@ -17,7 +17,7 @@ associated to the l2ss-py UMM-S record.
 ## What to do if tests fail
 
 If a test fails, meaning an assertion did not succeed, or an unknown error occurs action must be taken. The cause of the failure should be determined and fixed.
-A failing test generally indicates an issue with either metadata or l2ss-py itself and may require additional steps.
+A failing test generally indicates an issue with either metadata or concise itself and may require additional steps.
 In some cases, the test may need to be updated to account for a unique edge case.
 
 ## What to do if tests are skipped

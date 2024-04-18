@@ -34,6 +34,9 @@ jobs:
           poetry install
 
           ls -al
+          echo $GITHUB_WORKSPACE
+          ls -alR
+
           touch $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt
           touch $GITHUB_WORKSPACE/tests/cmr/concise/ops_associations.txt
 

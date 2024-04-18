@@ -33,9 +33,10 @@ jobs:
         run: |
           poetry install
 
+          ls -al
           touch $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt
           touch $GITHUB_WORKSPACE/tests/cmr/concise/ops_associations.txt
-          
+
           ls $GITHUB_WORKSPACE/tests/cmr/concise/uat/ > $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt
           ls $GITHUB_WORKSPACE/tests/cmr/concise/ops/ > $GITHUB_WORKSPACE/tests/cmr/concise/ops_associations.txt
 

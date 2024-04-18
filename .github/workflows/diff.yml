@@ -43,16 +43,16 @@ jobs:
           #ls $GITHUB_WORKSPACE/tests/cmr/concise/uat/ > $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt
           #ls $GITHUB_WORKSPACE/tests/cmr/concise/ops/ > $GITHUB_WORKSPACE/tests/cmr/concise/ops_associations.txt
 
-          poetry run cmr_association_diff -e uat -t service -p POCLOUD -n 'PODAAC Concise' -a uat_associations.txt --token $UAT_TOKEN_TEMP > $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt
-          poetry run cmr_association_diff -e ops -t service -p POCLOUD -n 'PODAAC Concise' -a ops_associations.txt --token $OPS_TOKEN_TEMP > $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt
+          poetry run cmr_association_diff -e uat -t service -p POCLOUD -n 'PODAAC Concise' -a uat_associations.txt --token $UAT_TOKEN_TEMP > new_uat_associations.txt
+          poetry run cmr_association_diff -e ops -t service -p POCLOUD -n 'PODAAC Concise' -a ops_associations.txt --token $OPS_TOKEN_TEMP > new_ops_associations.txt
 
-          echo "new_uat_associations=$(poetry run python tests/collection_names.py --env uat --token $UAT_TOKEN_TEMP --file $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt)" >> $GITHUB_OUTPUT
-          echo "new_ops_associations=$(poetry run python tests/collection_names.py --env ops --token $OPS_TOKEN_TEMP --file $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt)" >> $GITHUB_OUTPUT
+          echo "new_uat_associations=$(poetry run python tests/collection_names.py --env uat --token $UAT_TOKEN_TEMP --file new_uat_associations.txt)" >> $GITHUB_OUTPUT
+          echo "new_ops_associations=$(poetry run python tests/collection_names.py --env ops --token $OPS_TOKEN_TEMP --file new_ops_associations.txt)" >> $GITHUB_OUTPUT
 
           rm uat_associations.txt
           rm ops_associations.txt
-          rm $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt
-          rm $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt
+          rm new_uat_associations.txt
+          rm new_ops_associations.txt
   open_pr_uat:
     if: false
     needs: find_new

@@ -53,6 +53,8 @@ jobs:
       max-parallel: 2
       matrix:
         data: ${{fromJson(needs.find_new.outputs.new_uat_associations)}}
+        # temporary limit
+        runs: [1, 2, 3]
     runs-on: ubuntu-latest
     name: UAT ${{ matrix.data.concept_id }} ${{ matrix.data.short_name }}
     steps:
@@ -97,6 +99,8 @@ jobs:
       max-parallel: 2
       matrix:
         data: ${{fromJson(needs.find_new.outputs.new_ops_associations)}}
+        # temporary limit
+        runs: [1, 2, 3]
     runs-on: ubuntu-latest
     name: OPS ${{ matrix.data.concept_id }} ${{ matrix.data.short_name }}
     steps:

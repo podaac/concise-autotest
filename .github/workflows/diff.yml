@@ -33,15 +33,8 @@ jobs:
         run: |
           poetry install
 
-          ls -al
-          echo $GITHUB_WORKSPACE
-          ls -alR
-
-          touch uat_associations.txt
-          touch ops_associations.txt
-
-          #ls $GITHUB_WORKSPACE/tests/cmr/concise/uat/ > $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt
-          #ls $GITHUB_WORKSPACE/tests/cmr/concise/ops/ > $GITHUB_WORKSPACE/tests/cmr/concise/ops_associations.txt
+          ls $GITHUB_WORKSPACE/tests/cmr/concise/uat/ > uat_associations.txt
+          ls $GITHUB_WORKSPACE/tests/cmr/concise/ops/ > ops_associations.txt
 
           poetry run cmr_association_diff -e uat -t service -p POCLOUD -n 'PODAAC Concise' -a uat_associations.txt --token $UAT_TOKEN_TEMP > new_uat_associations.txt
           poetry run cmr_association_diff -e ops -t service -p POCLOUD -n 'PODAAC Concise' -a ops_associations.txt --token $OPS_TOKEN_TEMP > new_ops_associations.txt

@@ -54,7 +54,6 @@ jobs:
           rm new_uat_associations.txt
           rm new_ops_associations.txt
   open_pr_uat:
-    if: false
     needs: find_new
     strategy:
       fail-fast: false
@@ -99,7 +98,6 @@ jobs:
   
 
   open_pr_ops:
-    if: false
     needs: find_new
     strategy:
       fail-fast: false

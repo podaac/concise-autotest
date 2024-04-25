@@ -42,10 +42,7 @@ jobs:
           echo "new_uat_associations=$(poetry run python tests/collection_names.py --env uat --token $UAT_TOKEN_TEMP --file new_uat_associations.txt)" >> $GITHUB_OUTPUT
           echo "new_ops_associations=$(poetry run python tests/collection_names.py --env ops --token $OPS_TOKEN_TEMP --file new_ops_associations.txt)" >> $GITHUB_OUTPUT
 
-          rm uat_associations.txt
-          rm ops_associations.txt
-          rm new_uat_associations.txt
-          rm new_ops_associations.txt
+          rm *_associations.txt
   open_pr_uat:
     needs: find_new
     strategy:

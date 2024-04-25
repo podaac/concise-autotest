@@ -39,9 +39,12 @@ jobs:
           poetry run cmr_association_diff -e uat -t service -p POCLOUD -n 'PODAAC Concise' -a uat_associations.txt --token $UAT_TOKEN_TEMP > new_uat_associations.txt
           poetry run cmr_association_diff -e ops -t service -p POCLOUD -n 'PODAAC Concise' -a ops_associations.txt --token $OPS_TOKEN_TEMP > new_ops_associations.txt
 
-          # temporarily limit to 3 for each scan
-          head -n 3 new_uat_associations.txt > new_uat_associations.txt
-          head -n 3 new_ops_associations.txt > new_ops_associations.txt
+          cat new_uat_associations.txt
+          cat new_ops_associations.txt
+
+          # temporarily limit to 8 for each scan
+          head -n 8 new_uat_associations.txt > new_uat_associations.txt
+          head -n 8 new_ops_associations.txt > new_ops_associations.txt
 
           echo "new_uat_associations=$(poetry run python tests/collection_names.py --env uat --token $UAT_TOKEN_TEMP --file new_uat_associations.txt)" >> $GITHUB_OUTPUT
           echo "new_ops_associations=$(poetry run python tests/collection_names.py --env ops --token $OPS_TOKEN_TEMP --file new_ops_associations.txt)" >> $GITHUB_OUTPUT

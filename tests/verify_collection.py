@@ -10,6 +10,7 @@ import harmony
 import netCDF4
 import numpy as np
 import podaac.subsetter.subset
+import unittest
 import pytest
 import requests
 import xarray
@@ -336,142 +337,155 @@ def get_lat_lon_var_names(dataset: xarray.Dataset, file_to_subset: str, collecti
     pytest.fail(f"Unable to find latitude and longitude variables.")
 
 
-@pytest.mark.timeout(600)
-def test_spatial_subset(collection_concept_id, env, granule_json, collection_variables,
-                        harmony_env, tmp_path: pathlib.Path, bearer_token):
-    test_spatial_subset.__doc__ = f"Verify spatial subset for {collection_concept_id} in {env}"
+def verify_dims(merged_group, origin_group, both_merged):
+    for dim in origin_group.dimensions:
+        if both_merged:
+            unittest.TestCase().assertEqual(merged_group.dimensions[dim].size, origin_group.dimensions[dim].size)
+        else:
+            unittest.TestCase().assertGreaterEqual(merged_group.dimensions[dim].size, origin_group.dimensions[dim].size)
 
-    logging.info("Using granule %s for test", granule_json['meta']['concept-id'])
 
-    # Compute a box that is smaller than the granule extent bounding box
-    north, south, east, west = get_bounding_box(granule_json)
-    east, west, north, south = create_smaller_bounding_box(east, west, north, south, .95)
+def verify_attrs(merged_obj, origin_obj, both_merged):
+    ignore_attributes = [
+        'request-bounding-box', 'request-bounding-box-description', 'PODAAC-dataset-shortname',
+        'PODAAC-persistent-ID', 'time_coverage_end', 'time_coverage_start'
+    ]
 
-    # Build harmony request
-    harmony_client = harmony.Client(env=harmony_env, token=bearer_token)
-    request_bbox = harmony.BBox(w=west, s=south, e=east, n=north)
-    request_collection = harmony.Collection(id=collection_concept_id)
-    harmony_request = harmony.Request(collection=request_collection, spatial=request_bbox,
-                                      granule_id=[granule_json['meta']['concept-id']])
-    logging.info("Sending harmony request %s", harmony_client.request_as_curl(harmony_request))
+    merged_attrs = merged_obj.ncattrs()
+    origin_attrs = origin_obj.ncattrs()
 
-    # Submit harmony request and download result
-    job_id = harmony_client.submit(harmony_request)
-    logging.info("Submitted harmony job %s", job_id)
-    harmony_client.wait_for_processing(job_id, show_progress=True)
-    subsetted_filepath = None
-    for filename in [file_future.result()
-                     for file_future
-                     in harmony_client.download_all(job_id, directory=f'{tmp_path}', overwrite=True)]:
-        logging.info(f'Downloaded: %s', filename)
-        subsetted_filepath = pathlib.Path(filename)
+    for attr in origin_attrs:
+        if attr in ignore_attributes:
+            # Skip attributes which are present in the Java implementation,
+            # but not (currently) present in the Python implementation
+            continue
 
-    # Verify spatial subset worked
-    subsetted_ds = xarray.open_dataset(subsetted_filepath, decode_times=False)
-    group = None
-    # Try to read group in file
-    lat_var_name, lon_var_name = get_lat_lon_var_names(subsetted_ds, subsetted_filepath, collection_variables)
+        if not both_merged and attr not in merged_attrs:
+            # Skip attributes which are not present in both merged and origin.
+            # This is normal operation as some attributes may be omited b/c
+            # they're inconsistent between granules
+            continue
 
-    with netCDF4.Dataset(subsetted_filepath) as f:
-        group_list = []
-        def group_walk(groups, nc_d, current_group):
-            global subsetted_ds_new
-            subsetted_ds_new = None
-            # check if the top group has lat or lon variable
-            if lat_var_name in list(nc_d.variables.keys()):
-                subsetted_ds_new = subsetted_ds
-            else:
-                # if not then we'll need to keep track of the group layers
-                group_list.append(current_group)
+        merged_attr = merged_obj.getncattr(attr)
+        if both_merged and isinstance(merged_attr, int):
+            # Skip integer values - the Java implementation seems to omit
+            # these values due to its internal handling of all values as
+            # Strings
+            continue
 
-            # loop through the groups in the current layer
-            for g in groups:
-                # end the loop if we've already found latitude
-                if subsetted_ds_new:
-                    break
-                # check if the groups have latitude, define the dataset and end the loop if found
-                if lat_var_name in list(nc_d.groups[g].variables.keys()):
-                    group_list.append(g)
-                    g = '/'.join(group_list)
-                    subsetted_ds_new = xarray.open_dataset(subsetted_filepath, group=g, decode_times=False)
-                    break
-                # recall the function on a group that has groups in it and didn't find latitude
-                # this is going 'deeper' into the groups
-                if len(list(nc_d.groups[g].groups.keys())) > 0:
-                    group_walk(nc_d.groups[g].groups, nc_d.groups[g], g)
-                else:
-                    continue
+        origin_attr = origin_obj.getncattr(attr)
+        if isinstance(origin_attr, np.ndarray):
+            unittest.TestCase().assertTrue(np.array_equal(merged_attr, origin_attr))
+        else:
+            if attr != "history_json":
+                unittest.TestCase().assertEqual(merged_attr, origin_attr)
 
-        group_walk(f.groups, f, '')
 
-    assert lat_var_name and lon_var_name
+def verify_variables(merged_group, origin_group, subset_index, both_merged):
+    for var in origin_group.variables:
+        merged_var = merged_group.variables[var]
+        origin_var = origin_group.variables[var]
 
-    var_ds = None
-    msk = None
+        verify_attrs(merged_var, origin_var, both_merged)
 
-    if science_vars := get_science_vars(collection_variables):
-        for idx, value in enumerate(science_vars):
-            science_var_name = science_vars[idx]['umm']['Name']
-            try:
-                var_ds = subsetted_ds_new[science_var_name]
-                msk = np.logical_not(np.isnan(var_ds.data.squeeze()))
-                break
-            except Exception:
-                try:
-                    # if the variable couldn't be found because the name includes a group, e.g.,
-                    # `geolocation/relative_azimuth_angle`,
-                    # then try to access the variable after removing the group name.
-                    var_ds = subsetted_ds_new[science_var_name.rsplit("/", 1)[-1]]
-                    msk = np.logical_not(np.isnan(var_ds.data.squeeze()))
-                    break
-                except Exception:
-                    var_ds = None
-                    msk = None
+        if both_merged:
+            # both groups require subset indexes
+            merged_data = merged_var[subset_index[0]]
+            origin_data = origin_var[subset_index[1]]
+        else:
+            # merged group requires a subset index
+            merged_data = np.resize(merged_var[subset_index], origin_var.shape)
+            origin_data = origin_var
 
-        if var_ds is None and msk is None:
-            pytest.fail(f"Unable to find variable from umm-v to use as science variable.")
+        equal_nan = True
+        if merged_data.dtype.kind == 'S':
+            equal_nan = False
 
+        # verify variable data
+        if isinstance(origin_data, str):
+            unittest.TestCase().assertEqual(merged_data, origin_data)
+        else:
+            unittest.TestCase().assertTrue(np.array_equal(merged_data, origin_data, equal_nan=equal_nan))
+
+
+def verify_groups(merged_group, origin_group, subset_index, file=None, both_merged=False):
+    if file:
+        print("verifying groups ....." + file)
+
+    verify_dims(merged_group, origin_group, both_merged)
+    verify_attrs(merged_group, origin_group, both_merged)
+    verify_variables(merged_group, origin_group, subset_index, both_merged)
+
+    for child_group in origin_group.groups:
+        merged_subgroup = merged_group[child_group]
+        origin_subgroup = origin_group[child_group]
+        verify_groups(merged_subgroup, origin_subgroup, subset_index, both_merged=both_merged)
+
+
+def download_file(url, local_path, headers):
+    response = requests.get(url, stream=True, headers=headers)
+    if response.status_code == 200:
+        with open(local_path, 'wb') as file:
+            for chunk in response.iter_content(chunk_size=8192):
+                file.write(chunk)
+        print("Original File downloaded successfully. " + local_path)
     else:
-        # Can't find a science var in UMM-V, just pick one
+        print(f"Failed to download the file. Status code: {response.status_code}")
 
-        science_var_name = next(iter([v for v in subsetted_ds_new.variables if
-                                    str(v) not in lat_var_name and str(v) not in lon_var_name and 'time' not in str(v)]))
 
-        var_ds = subsetted_ds_new[science_var_name]
+@pytest.mark.timeout(600)
+def test_concatenate(collection_concept_id, harmony_env, bearer_token):
 
-    try:
-        msk = np.logical_not(np.isnan(var_ds.data.squeeze()))
-        llat = subsetted_ds_new[lat_var_name].where(msk)
-        llon = subsetted_ds_new[lon_var_name].where(msk)
-    except ValueError:
-        
-        llat = subsetted_ds_new[lat_var_name]
-        llon = subsetted_ds_new[lon_var_name]
+    max_results = 2
 
-    lat_max = llat.max()
-    lat_min = llat.min()
+    harmony_client = harmony.Client(env=harmony_env, token=bearer_token)
+    collection = harmony.Collection(id=collection_concept_id)
 
-    lon_min = llon.min()
-    lon_max = llon.max()
+    request = harmony.Request(
+        collection=collection,
+        concatenate=True,
+        max_results=max_results,
+        skip_preview=True,
+        format="application/x-netcdf4",
+    )
 
-    lon_min = (lon_min + 180) % 360 - 180
-    lon_max = (lon_max + 180) % 360 - 180
+    request.is_valid()
 
-    lat_var_fill_value = subsetted_ds_new[lat_var_name].encoding.get('_FillValue')
-    lon_var_fill_value = subsetted_ds_new[lon_var_name].encoding.get('_FillValue')
+    print(harmony_client.request_as_curl(request))
 
-    if lat_var_fill_value:
-        if (lat_max <= north or np.isclose(lat_max, north)) and (lat_min >= south or np.isclose(lat_min, south)):
-            logging.info("Successful Latitude subsetting")
-        elif np.isnan(lat_max) and np.isnan(lat_min):
-            logging.info("Partial Lat Success - no Data")
-        else:
-            assert False
+    job1_id = harmony_client.submit(request)
 
-    if lon_var_fill_value:
-        if (lon_max <= east or np.isclose(lon_max, east)) and (lon_min >= west or np.isclose(lon_min, west)):
-            logging.info("Successful Longitude subsetting")
-        elif np.isnan(lon_max) and np.isnan(lon_min):
-            logging.info("Partial Lon Success - no Data")
-        else:
-            assert False
+    print(f'\n{job1_id}')
+
+    print(harmony_client.status(job1_id))
+
+    print('\nWaiting for the job to finish')
+
+    results = harmony_client.result_json(job1_id)
+
+    print('\nDownloading results:')
+
+    futures = harmony_client.download_all(job1_id)
+    file_names = [f.result() for f in futures]
+    print('\nDone downloading.')
+
+    filename = file_names[0]
+
+    # Handle time dimension and variables dropping
+    merge_dataset = netCDF4.Dataset(filename, 'r')
+
+    headers = {
+        "Authorization": f"Bearer {bearer_token}"
+    }
+
+    original_files = merge_dataset.variables['subset_files']
+    history_json = json.loads(merge_dataset.history_json)
+    assert len(original_files) == max_results
+
+    for url in history_json[0].get("derived_from"):
+        local_file_name = os.path.basename(url)
+        download_file(url, local_file_name, headers)
+
+    for i, file in enumerate(original_files):
+        origin_dataset = netCDF4.Dataset(file)
+        verify_groups(merge_dataset, origin_dataset, i, file=file)

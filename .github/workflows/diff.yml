@@ -1,5 +1,5 @@
 # Run every third day starting from the 2nd of the month 1 am pacific 
-# check for new collection associations to the l2ss-py UMM-S record
+# check for new collection associations to the concise UMM-S record
 # in UAT and OPS. If a new association is found, a PR is opened to add the new collection concept id to the
 # cmr/concise/*_associations.txt file.
 
@@ -33,21 +33,17 @@ jobs:
         run: |
           poetry install
 
-          ls $GITHUB_WORKSPACE/tests/cmr/concise/uat/ > $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt
-          ls $GITHUB_WORKSPACE/tests/cmr/concise/ops/ > $GITHUB_WORKSPACE/tests/cmr/concise/ops_associations.txt
+          ls $GITHUB_WORKSPACE/tests/cmr/concise/uat/ > uat_associations.txt
+          ls $GITHUB_WORKSPACE/tests/cmr/concise/ops/ > ops_associations.txt
 
-          poetry run cmr_association_diff -e uat -t service -p POCLOUD -n 'PODAAC Concise' -a $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt --token $UAT_TOKEN_TEMP > $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt
-          poetry run cmr_association_diff -e ops -t service -p POCLOUD -n 'PODAAC Concise' -a $GITHUB_WORKSPACE/tests/cmr/concise/ops_associations.txt --token $OPS_TOKEN_TEMP > $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt
+          poetry run cmr_association_diff -e uat -t service -p POCLOUD -n 'PODAAC Concise' -a uat_associations.txt --token $UAT_TOKEN_TEMP > new_uat_associations.txt
+          poetry run cmr_association_diff -e ops -t service -p POCLOUD -n 'PODAAC Concise' -a ops_associations.txt --token $OPS_TOKEN_TEMP > new_ops_associations.txt
 
-          echo "new_uat_associations=$(poetry run python tests/collection_names.py --env uat --token $UAT_TOKEN_TEMP --file $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt)" >> $GITHUB_OUTPUT
-          echo "new_ops_associations=$(poetry run python tests/collection_names.py --env ops --token $OPS_TOKEN_TEMP --file $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt)" >> $GITHUB_OUTPUT
+          echo "new_uat_associations=$(poetry run python tests/collection_names.py --env uat --token $UAT_TOKEN_TEMP --file new_uat_associations.txt)" >> $GITHUB_OUTPUT
+          echo "new_ops_associations=$(poetry run python tests/collection_names.py --env ops --token $OPS_TOKEN_TEMP --file new_ops_associations.txt)" >> $GITHUB_OUTPUT
 
-          rm $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt
-          rm $GITHUB_WORKSPACE/tests/cmr/concise/ops_associations.txt
-          rm $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt
-          rm $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt
+          rm *_associations.txt
   open_pr_uat:
-    if: false
     needs: find_new
     strategy:
       fail-fast: false
@@ -80,7 +76,7 @@ jobs:
           delete-branch: true
           title: UAT ${{ matrix.data.concept_id }} (${{ matrix.data.short_name }})
           body: |
-            New association between l2ss-py and ${{ matrix.data.concept_id }} found in UAT.
+            New association between concise and ${{ matrix.data.concept_id }} found in UAT.
             Beginning verification of collection.
           labels: |
             unverified
@@ -92,7 +88,6 @@ jobs:
   
 
   open_pr_ops:
-    if: false
     needs: find_new
     strategy:
       fail-fast: false
@@ -125,7 +120,7 @@ jobs:
           delete-branch: true
           title: OPS ${{ matrix.data.concept_id }} (${{ matrix.data.short_name }})
           body: |
-            New association between l2ss-py and ${{ matrix.data.concept_id }} found in OPS.
+            New association between concise and ${{ matrix.data.concept_id }} found in OPS.
             Beginning verification of collection.
           labels: |
             unverified

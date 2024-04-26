@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     # Replace these variables with your own values
     repo_owner = 'podaac'
-    repo_name = 'l2ss-py-autotest'
+    repo_name = 'concise-autotest'
     github_token = os.getenv("GITHUB_TOKEN")
 
     # Initialize a Github instance

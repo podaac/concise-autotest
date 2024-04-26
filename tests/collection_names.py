@@ -7,7 +7,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="Get Collection Names from CMR")
     parser.add_argument("--token", help="launchpad token")
-    parser.add_argument("--file", help="file with list of l2ss associations")
+    parser.add_argument("--file", help="file with list of concise associations")
     parser.add_argument("--env", help="CMR environment")
 
     args = parser.parse_args()

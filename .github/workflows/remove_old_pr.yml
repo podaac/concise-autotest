@@ -2,8 +2,8 @@
 name: Remove PR old association
 on:
   workflow_dispatch:
-#  schedule:
-#    - cron: '0 11 2-31/3 * *'
+  schedule:
+    - cron: '0 11 2-31/3 * *'
 
 jobs:
   find_new:
@@ -31,8 +31,8 @@ jobs:
           ls $GITHUB_WORKSPACE/tests/cmr/concise/uat/ > $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt
           ls $GITHUB_WORKSPACE/tests/cmr/concise/ops/ > $GITHUB_WORKSPACE/tests/cmr/concise/ops_associations.txt
 
-          poetry run cmr_association_diff -e uat -t service -p POCLOUD -n 'PODAAC L2 Cloud Subsetter' -a $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt --token $UAT_TOKEN_TEMP > $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt
-          poetry run cmr_association_diff -e ops -t service -p POCLOUD -n 'PODAAC L2 Cloud Subsetter' -a $GITHUB_WORKSPACE/tests/cmr/concise/ops_associations.txt --token $OPS_TOKEN_TEMP > $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt
+          poetry run cmr_association_diff -e uat -t service -p POCLOUD -n 'PODAAC Concise' -a $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt --token $UAT_TOKEN_TEMP > $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt
+          poetry run cmr_association_diff -e ops -t service -p POCLOUD -n 'PODAAC Concise' -a $GITHUB_WORKSPACE/tests/cmr/concise/ops_associations.txt --token $OPS_TOKEN_TEMP > $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt
 
           poetry run python tests/collection_names.py --env uat --token $UAT_TOKEN_TEMP --file $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt
           poetry run python tests/collection_names.py --env ops --token $OPS_TOKEN_TEMP --file $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt

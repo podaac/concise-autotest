@@ -2,6 +2,14 @@
 
 git fetch --all
 
+# Fetch open PRs and enable auto-merge on each one
+pr_numbers=$(gh pr list --state open --json number | jq -r '.[].number')
+
+for pr_number in $pr_numbers; do
+    echo "Auto-merging PR number: $pr_number"
+    gh pr merge --merge --auto $pr_number
+done
+
 gh pr list --state open --label $1 --limit 500 >branches.list
 #git branch -r >branches.list
 
@@ -12,15 +20,6 @@ cat branches2.list
 
 #git config --global user.email ${{ github.actor }}@users.noreply.github.com
 #git config --global user.name "${{ github.actor }}"
-
-# Fetch a list of open pull requests using gh pr list and extract the numbers
-pr_numbers=$(gh pr list --state open --json number | jq -r '.[].number')
-
-# Loop through the list of pull request numbers
-for pr_number in $pr_numbers; do
-    echo "Pull Request Number: $pr_number"
-    gh pr edit $pr_number --auto-merge --merge --squash
-done
 
 while read branch; do
   echo "Branch: $branch"

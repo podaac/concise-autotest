@@ -22,7 +22,7 @@ jobs:
           token: ${{ steps.podaac-cicd.outputs.token }}
       - name: Empty Commits
         env:
-          GH_TOKEN: ${{ steps.podaac-cicd.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           cd .github/workflows
           git config --global user.email ${{ github.actor }}@users.noreply.github.com

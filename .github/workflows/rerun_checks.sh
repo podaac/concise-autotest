@@ -14,7 +14,7 @@ cat branches2.list
 #git config --global user.name "${{ github.actor }}"
 
 # Fetch a list of open pull requests using gh pr list and extract the numbers
-pr_numbers=($(gh pr list --state open --json number | jq -r '.[].number'))
+pr_numbers=$(gh pr list --state open --json number | jq -r '.[].number')
 
 # Loop through the array of pull request numbers
 for pr_number in "${pr_numbers[@]}"; do

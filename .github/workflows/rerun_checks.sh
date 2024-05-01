@@ -13,6 +13,15 @@ cat branches2.list
 #git config --global user.email ${{ github.actor }}@users.noreply.github.com
 #git config --global user.name "${{ github.actor }}"
 
+# Fetch a list of open pull requests using gh pr list and extract the numbers
+pr_numbers=($(gh pr list --state open --json number | jq -r '.[].number'))
+
+# Loop through the array of pull request numbers
+for pr_number in "${pr_numbers[@]}"; do
+    echo "Pull Request Number: $pr_number"
+    gh pr edit $pr_number --auto-merge --merge --squash
+done
+
 while read branch; do
   echo "Branch: $branch"
   git checkout $branch

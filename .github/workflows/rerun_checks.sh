@@ -16,8 +16,8 @@ cat branches2.list
 # Fetch a list of open pull requests using gh pr list and extract the numbers
 pr_numbers=$(gh pr list --state open --json number | jq -r '.[].number')
 
-# Loop through the array of pull request numbers
-for pr_number in "${pr_numbers[@]}"; do
+# Loop through the list of pull request numbers
+for pr_number in $pr_numbers; do
     echo "Pull Request Number: $pr_number"
     gh pr edit $pr_number --auto-merge --merge --squash
 done

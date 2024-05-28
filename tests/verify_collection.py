@@ -14,6 +14,7 @@ import unittest
 import pytest
 import requests
 import xarray
+from urllib.parse import unquote 
 
 from requests.auth import HTTPBasicAuth
 
@@ -410,7 +411,7 @@ def verify_variables(merged_group, origin_group, subset_index, both_merged):
 
 def verify_groups(merged_group, origin_group, subset_index, file=None, both_merged=False):
     if file:
-        print("verifying groups ....." + file)
+        logging.info("verifying groups ....." + file)
 
     verify_dims(merged_group, origin_group, both_merged)
     verify_attrs(merged_group, origin_group, both_merged)
@@ -428,9 +429,9 @@ def download_file(url, local_path, headers):
         with open(local_path, 'wb') as file:
             for chunk in response.iter_content(chunk_size=8192):
                 file.write(chunk)
-        print("Original File downloaded successfully. " + local_path)
+        logging.info("Original File downloaded successfully. " + local_path)
     else:
-        print(f"Failed to download the file. Status code: {response.status_code}")
+        logging.info(f"Failed to download the file. Status code: {response.status_code}")
 
 
 @pytest.mark.timeout(600)
@@ -451,23 +452,23 @@ def test_concatenate(collection_concept_id, harmony_env, bearer_token):
 
     request.is_valid()
 
-    print(harmony_client.request_as_curl(request))
+    logging.info("Sending harmony request %s", unquote(harmony_client.request_as_url(request)))
 
     job1_id = harmony_client.submit(request)
 
-    print(f'\n{job1_id}')
+    logging.info(f'\n{job1_id}')
 
-    print(harmony_client.status(job1_id))
+    logging.info(harmony_client.status(job1_id))
 
-    print('\nWaiting for the job to finish')
+    logging.info('\nWaiting for the job to finish')
 
     results = harmony_client.result_json(job1_id)
 
-    print('\nDownloading results:')
+    logging.info('\nDownloading results:')
 
     futures = harmony_client.download_all(job1_id)
     file_names = [f.result() for f in futures]
-    print('\nDone downloading.')
+    logging.info('\nDone downloading.')
 
     filename = file_names[0]
 

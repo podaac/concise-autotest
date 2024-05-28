@@ -14,6 +14,7 @@ import unittest
 import pytest
 import requests
 import xarray
+from urllib.parse import unquote 
 
 from requests.auth import HTTPBasicAuth
 
@@ -451,7 +452,7 @@ def test_concatenate(collection_concept_id, harmony_env, bearer_token):
 
     request.is_valid()
 
-    logging.info("Sending harmony request %s", harmony_client.request_as_url(request))
+    logging.info("Sending harmony request %s", unquote(harmony_client.request_as_url(request)))
 
     job1_id = harmony_client.submit(request)
 

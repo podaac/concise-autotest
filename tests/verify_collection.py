@@ -189,14 +189,8 @@ def verify_variables(merged_group, origin_group, subset_index, both_merged, file
         if isinstance(origin_data, str):
             unittest.TestCase().assertEqual(merged_data, origin_data)
         else:
-            try:
-                unittest.TestCase().assertTrue(np.array_equal(merged_data, origin_data, equal_nan=equal_nan))
-            except Exception as ex:
-                print(var)
-                print(merged_data.shape)
-                print(origin_data.shape)
-                print(len(origin_data.shape))
-                raise(ex)
+            unittest.TestCase().assertTrue(np.array_equal(merged_data, origin_data, equal_nan=equal_nan))
+
 
 def verify_groups(merged_group, origin_group, subset_index, file=None, both_merged=False):
     if file:

@@ -132,29 +132,6 @@ def verify_attrs(merged_obj, origin_obj, both_merged):
                 unittest.TestCase().assertEqual(merged_attr, origin_attr)
 
 
-def custom_resize(arr, new_shape):
-    """
-    Resize the input array to the specified shape.
-    
-    Parameters:
-        arr (numpy.ndarray): Input array to be resized.
-        new_shape (tuple): Desired shape of the resized array.
-    
-    Returns:
-        numpy.ndarray: Resized array.
-    """
-    # Get the minimum shape along each axis
-    min_shape = tuple(min(s, ns) for s, ns in zip(arr.shape, new_shape))
-    
-    # Create a new array with the desired shape
-    resized_arr = np.zeros(new_shape, dtype=arr.dtype)
-    
-    # Copy elements from the original array to the new array
-    resized_arr[:min_shape[0], :min_shape[1]] = arr[:min_shape[0], :min_shape[1]]
-    
-    return resized_arr
-
-
 def verify_variables(merged_group, origin_group, subset_index, both_merged, file=None):
     for var in origin_group.variables:
         merged_var = merged_group.variables[var]

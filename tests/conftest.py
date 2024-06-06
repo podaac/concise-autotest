@@ -53,7 +53,7 @@ def pytest_generate_tests(metafunc):
         cmr_dirpath = pathlib.Path('cmr/concise')
 
         association_dir = 'uat' if metafunc.config.option.env == 'uat' else 'ops'
-        associations = os.listdir(cmr_dirpath.joinpath(association_dir))[:10]
+        associations = os.listdir(cmr_dirpath.joinpath(association_dir))
 
         if 'collection_concept_id' in metafunc.fixturenames and associations is not None:
             metafunc.parametrize("collection_concept_id", associations)

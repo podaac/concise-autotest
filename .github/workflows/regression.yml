@@ -42,7 +42,7 @@ jobs:
         ENV:  ${{ matrix.environment }}
       run: |
         poetry run pytest verify_collection.py --env ${{ matrix.environment }} --regression --junitxml=$GITHUB_WORKSPACE/test-results/${{ matrix.environment }}_test_report.xml || true
-        poetry run get_associations.py
+        poetry run python get_associations.py
 
     - name: Run Create Issues Script
       working-directory: tests

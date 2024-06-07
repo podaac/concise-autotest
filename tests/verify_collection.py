@@ -16,7 +16,7 @@ import requests
 import xarray
 
 from requests.auth import HTTPBasicAuth
-from tenacity import retry, wait_fixed, stop_after_attempt, wait_exponential
+from tenacity import retry, retry_if_exception_type, wait_exponential, stop_after_attempt
 
 import cmr
 
@@ -184,7 +184,7 @@ def verify_groups(merged_group, origin_group, subset_index, file=None, both_merg
         verify_groups(merged_subgroup, origin_subgroup, subset_index, both_merged=both_merged)
 
 
-@retry(wait=wait_exponential(multiplier=1.5, min=3, max=60), stop=stop_after_attempt(10))
+@retry(retry=retry_if_exception_type(requests.RequestException), wait=wait_exponential(min=3, max=60), stop=stop_after_attempt(10))
 def download_file(url, local_path, headers=None):
     try:
         with requests.get(url, stream=True, headers=headers) as response:
@@ -193,9 +193,10 @@ def download_file(url, local_path, headers=None):
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:  # Filter out keep-alive new chunks
                         file.write(chunk)
-        logging.info(f"File downloaded successfully: {local_path}")
+            logging.info(f"File downloaded successfully: {local_path}")
     except requests.RequestException as e:
         logging.error(f"Failed to download the file. Exception: {e}")
+        raise e  # Re-raise the exception to trigger the retry
 
 
 @pytest.mark.timeout(600)

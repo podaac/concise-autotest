@@ -219,7 +219,13 @@ def test_concatenate(collection_concept_id, harmony_env, bearer_token):
 
     logging.info("Sending harmony request %s", harmony_client.request_as_url(request))
 
-    job1_id = harmony_client.submit(request)
+    try:
+        job1_id = harmony_client.submit(request)
+    except Exception as ex:
+        if str(ex) == "('Bad Request', 'Error: No matching granules found.')":
+            if harmony_env == harmony.config.Environment.UAT:
+                pytest.skip(f"No granules found for UAT collection {collection_concept_id}")
+        raise ex
 
     logging.info(f'\n{job1_id}')
 

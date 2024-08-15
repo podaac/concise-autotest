@@ -133,13 +133,8 @@ def verify_attrs(merged_obj, origin_obj, both_merged):
                 unittest.TestCase().assertEqual(merged_attr, origin_attr)
 
 
-def verify_variables(merged_group, origin_group, subset_index, both_merged, file=None, variables_in_original=None):
-
-    variables = origin_group.variables
-    if variables_in_original:
-        variables = variables_in_original
-
-    for var in variables:
+def verify_variables(merged_group, origin_group, subset_index, both_merged, file=None):
+    for var in origin_group.variables:
         merged_var = merged_group.variables[var]
         origin_var = origin_group.variables[var]
 
@@ -175,13 +170,13 @@ def verify_variables(merged_group, origin_group, subset_index, both_merged, file
             unittest.TestCase().assertTrue(np.array_equal(merged_data, origin_data, equal_nan=equal_nan))
 
 
-def verify_groups(merged_group, origin_group, subset_index, file=None, variables_in_original=None, both_merged=False):
+def verify_groups(merged_group, origin_group, subset_index, file=None, both_merged=False):
     if file:
         logging.info("verifying groups ....." + file)
 
     verify_dims(merged_group, origin_group, both_merged)
     verify_attrs(merged_group, origin_group, both_merged)
-    verify_variables(merged_group, origin_group, subset_index, both_merged, file=file, variables_in_original=variables_in_original)
+    verify_variables(merged_group, origin_group, subset_index, both_merged, file=file)
 
     for child_group in origin_group.groups:
         merged_subgroup = merged_group[child_group]
@@ -263,21 +258,6 @@ def test_concatenate(collection_concept_id, harmony_env, bearer_token):
         local_file_name = os.path.basename(url)
         download_file(url, local_file_name, headers)
 
-    # Get original variables in both original files sometimes we might concatenate a Night and Day granule
-    # which can have different variables
-    variables_in_original = []
     for i, file in enumerate(original_files):
         origin_dataset = netCDF4.Dataset(file)
-
-        variables = list(origin_dataset.variables)
-        if len(variables_in_original) == 0:
-            variables_in_original = variables
-        else:
-            for var in variables_in_original:
-                if var not in variables:
-                    variables_in_original.remove(var)
-
-    for i, file in enumerate(original_files):
-        origin_dataset = netCDF4.Dataset(file)
-        verify_groups(merge_dataset, origin_dataset, i, file=file, variables_in_original=variables_in_original)
-        origin_dataset.close()
+        verify_groups(merge_dataset, origin_dataset, i, file=file)

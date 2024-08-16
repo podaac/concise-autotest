@@ -199,18 +199,55 @@ def download_file(url, local_path, headers=None):
         raise e  # Re-raise the exception to trigger the retry
 
 
+def get_latest_granules(collection_concept_id, number_of_granules, env, token):
+    
+    cmr_url = "https://cmr.earthdata.nasa.gov/search/granules.json"
+    if env == harmony.config.Environment.UAT:
+        cmr_url = "https://cmr.uat.earthdata.nasa.gov/search/granules.json"
+    
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    params = {
+        "collection_concept_id": collection_concept_id,
+        "sort_key": "-start_date",  # Sort by start_date in descending order
+        "page_size": number_of_granules  # Retrieve the latest 'x' granules
+    }
+    
+    # Make the request to CMR
+    response = requests.get(cmr_url, headers=headers, params=params)
+
+    # Check if the request was successful
+    if response.status_code == 200:
+        granules = response.json().get("feed", {}).get("entry", [])
+        
+        if granules:
+            granule_ids = [granule["id"] for granule in granules]
+            return granule_ids
+        else:
+            return None
+    else:
+        return None
+
 @pytest.mark.timeout(600)
 def test_concatenate(collection_concept_id, harmony_env, bearer_token):
 
     max_results = 2
-
     harmony_client = harmony.Client(env=harmony_env, token=bearer_token)
     collection = harmony.Collection(id=collection_concept_id)
+    latest_granule_ids = get_latest_granules(collection_concept_id, max_results, harmony_env, bearer_token)
+
+    if latest_granule_ids is None:
+        if harmony_env == harmony.config.Environment.UAT:
+            pytest.skip(f"No granules found for UAT collection {collection_concept_id}")
+        raise Exception('Bad Request', 'Error: No matching granules found.')
 
     request = harmony.Request(
         collection=collection,
         concatenate=True,
         max_results=max_results,
+        granule_id=latest_granule_ids,
         skip_preview=True,
         format="application/x-netcdf4",
     )

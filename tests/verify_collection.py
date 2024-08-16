@@ -201,10 +201,7 @@ def download_file(url, local_path, headers=None):
 
 def get_latest_granules(collection_concept_id, number_of_granules, env, token):
     
-    cmr_url = "https://cmr.earthdata.nasa.gov/search/granules.json"
-    if env == harmony.config.Environment.UAT:
-        cmr_url = "https://cmr.uat.earthdata.nasa.gov/search/granules.json"
-    
+    cmr_url = f"https://cmr.{'uat.' if env == harmony.config.Environment.UAT else ''}earthdata.nasa.gov/search/granules.json"
     headers = {
         "Authorization": f"Bearer {token}"
     }

@@ -30,7 +30,7 @@ def main():
     collections = []
 
     try:
-        with open(file_path, 'r') as file:
+        with open(args.file, 'r') as file:
             file_content = file.read()
             collections_list = json.loads(file_content)
     except json.JSONDecodeError as e:

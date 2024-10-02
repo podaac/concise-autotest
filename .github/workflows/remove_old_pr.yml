@@ -36,6 +36,7 @@ jobs:
 
           ls -la
           cat $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt
+          cat $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt
 
           poetry run python tests/collection_names.py --env uat --token $UAT_TOKEN_TEMP --file $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt
           poetry run python tests/collection_names.py --env ops --token $OPS_TOKEN_TEMP --file $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt

@@ -36,6 +36,7 @@ def main():
     except json.JSONDecodeError as e:
         print(f"Failed to parse JSON: {e}")
         print(f"Content of the file:\n{file_content}")  # Print the file content
+        raise e
     except FileNotFoundError:
         print(f"Error: File '{args.file}' not found.")
         return

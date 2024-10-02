@@ -29,6 +29,7 @@ def main():
     providers = []
     collections = []
 
+    print(args.file)
     try:
         with open(args.file, 'r') as file:
             file_content = file.read()

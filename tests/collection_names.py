@@ -33,12 +33,11 @@ def main():
     try:
         with open(args.file, 'r') as file:
             file_content = file.read()
-            print('print file content')
-            print(file_content)
-            collections_list = json.loads(file_content)
+            if file_content:
+                collections_list = json.loads(file_content)
     except json.JSONDecodeError as e:
         print(f"Failed to parse JSON: {e}")
-        print(f"Content of the file:\n {file_content}")  # Print the file content
+        print(f"Content of the file:\n {file_content}")
         raise e
     except FileNotFoundError:
         print(f"Error: File '{args.file}' not found.")

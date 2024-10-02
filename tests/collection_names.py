@@ -41,6 +41,7 @@ def main():
         return
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+        raise e
 
     for collection in collections_list:
         provider = collection.split('-')[1]

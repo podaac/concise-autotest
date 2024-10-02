@@ -29,7 +29,6 @@ def main():
     providers = []
     collections = []
 
-    print(args.file)
     try:
         with open(args.file, 'r') as file:
             file_content = file.read()
@@ -108,11 +107,10 @@ def main():
 
     file_path = f"{args.env}_new_collections.json"
 
-    if collections:
-        with open(file_path, "w") as json_file:
-            json.dump(collections, json_file, indent=4)
+    with open(file_path, "w") as json_file:
+        json.dump(collections, json_file, indent=4)
 
-        print(json.dumps(collections))
+    print(json.dumps(collections))
 
 if __name__ == "__main__":
     main()

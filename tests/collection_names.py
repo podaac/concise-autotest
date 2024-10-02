@@ -35,6 +35,8 @@ def main():
             file_content = file.read()
             if file_content:
                 collections_list = json.loads(file_content)
+            else:
+                collections_list = []
     except json.JSONDecodeError as e:
         print(f"Failed to parse JSON: {e}")
         print(f"Content of the file:\n {file_content}")
@@ -106,10 +108,11 @@ def main():
 
     file_path = f"{args.env}_new_collections.json"
 
-    with open(file_path, "w") as json_file:
-        json.dump(collections, json_file, indent=4)
+    if collections:
+        with open(file_path, "w") as json_file:
+            json.dump(collections, json_file, indent=4)
 
-    print(json.dumps(collections))
+        print(json.dumps(collections))
 
 if __name__ == "__main__":
     main()

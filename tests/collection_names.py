@@ -33,6 +33,7 @@ def main():
     try:
         with open(args.file, 'r') as file:
             file_content = file.read()
+            print(file_content)
             collections_list = json.loads(file_content)
     except json.JSONDecodeError as e:
         print(f"Failed to parse JSON: {e}")

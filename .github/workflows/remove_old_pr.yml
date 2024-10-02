@@ -34,10 +34,6 @@ jobs:
           poetry run cmr_association_diff -e uat -t service -p POCLOUD -n 'PODAAC Concise' -a $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt --token $UAT_TOKEN_TEMP > $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt
           poetry run cmr_association_diff -e ops -t service -p POCLOUD -n 'PODAAC Concise' -a $GITHUB_WORKSPACE/tests/cmr/concise/ops_associations.txt --token $OPS_TOKEN_TEMP > $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt
 
-          ls -la
-          cat $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt
-          cat $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt
-
           poetry run python tests/collection_names.py --env uat --token $UAT_TOKEN_TEMP --file $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt
           poetry run python tests/collection_names.py --env ops --token $OPS_TOKEN_TEMP --file $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt
 

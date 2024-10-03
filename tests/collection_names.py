@@ -28,12 +28,24 @@ def main():
     # Get providers
     providers = []
     collections = []
+
     try:
-        with open(args.file, "r") as file:
-            collections_list = json.loads(file.read())
+        with open(args.file, 'r') as file:
+            file_content = file.read()
+            if file_content:
+                collections_list = json.loads(file_content)
+            else:
+                collections_list = []
+    except json.JSONDecodeError as e:
+        print(f"Failed to parse JSON: {e}")
+        print(f"Content of the file:\n {file_content}")
+        raise e
     except FileNotFoundError:
         print(f"Error: File '{args.file}' not found.")
         return
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        raise e
 
     for collection in collections_list:
         provider = collection.split('-')[1]

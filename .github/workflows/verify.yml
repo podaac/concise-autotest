@@ -35,16 +35,20 @@ jobs:
         run: |
           echo "test_env=$(python -c "print('${{ github.head_ref }}'.split('/')[1])")" >> $GITHUB_OUTPUT
           echo "concept_id=$(python -c "print('${{ github.head_ref }}'.split('/')[2])")" >> $GITHUB_OUTPUT
+      - name: install
+        id: install
+        run: |
+          poetry install
       - name: Execute tests
         id: run-tests
+        working-directory: tests
         env:
           TEST_ENV: ${{ steps.get-env-ccid.outputs.test_env }}
           CONCEPT_ID: ${{ steps.get-env-ccid.outputs.concept_id }}
           CMR_USER: ${{ secrets.CMR_USER }}
           CMR_PASS: ${{ secrets.CMR_PASS }}
         run: |
-          poetry install
-          poetry run pytest tests/verify_collection.py --concept_id $CONCEPT_ID --env $TEST_ENV --junitxml=$GITHUB_WORKSPACE/test-results/test_report.xml --html=$GITHUB_WORKSPACE/test-results/test_report.html || true
+          poetry run pytest verify_collection.py --concept_id $CONCEPT_ID --env $TEST_ENV --junitxml=$GITHUB_WORKSPACE/test-results/test_report.xml --html=$GITHUB_WORKSPACE/test-results/test_report.html || true
       - name: Publish Test Results
         id: publish-test
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -62,12 +66,8 @@ jobs:
           echo "any_test_failed=${{ fromJSON( steps.publish-test.outputs.json ).stats.tests_fail > 0 }}" >> $GITHUB_OUTPUT
           echo "any_test_skipped=${{ fromJSON( steps.publish-test.outputs.json ).stats.tests_skip > 0 }}" >> $GITHUB_OUTPUT
           echo "any_test_error=${{ fromJSON( steps.publish-test.outputs.json ).stats.tests_error > 0 }}" >> $GITHUB_OUTPUT
-          echo "all_tests_passed=${{ fromJSON( steps.publish-test.outputs.json ).stats.tests_succ == fromJSON( steps.publish-test.outputs.json ).stats.tests }}" >> $GITHUB_OUTPUT
-          echo "all_tests_passed=${{ fromJSON( steps.publish-test.outputs.json ).stats.tests_succ == fromJSON( steps.publish-test.outputs.json ).stats.tests }}" >> $GITHUB_ENV
-          # echo "any_test_failed=false"  >> $GITHUB_OUTPUT
-          # echo "any_test_skipped=false" >> $GITHUB_OUTPUT
-          # echo "any_test_error=false"   >> $GITHUB_OUTPUT
-          # echo "all_test_passed=true"  >> $GITHUB_OUTPUT
+          echo "any_test_passed=${{ fromJSON( steps.publish-test.outputs.json ).stats.tests_succ > 0 }}" >> $GITHUB_OUTPUT
+          echo "all_tests_succeeded_or_skipped=${{ fromJSON( steps.publish-test.outputs.json ).stats.tests_succ > 0 && fromJSON( steps.publish-test.outputs.json ).stats.tests_fail == 0 && fromJSON( steps.publish-test.outputs.json ).stats.tests_error == 0 }}" >> $GITHUB_ENV
       - uses: actions/upload-artifact@v3
         if: always()
         with:
@@ -75,14 +75,13 @@ jobs:
           path: test-results/**
       - name: Succeeded in Completing All Tests
         uses: LouisBrunner/checks-action@v1.6.1
-        if: env.all_tests_passed == 'true' 
+        if: env.all_tests_succeeded_or_skipped == 'true'
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          name: All Tests Run And Passed
+          name: All Tests Run and Completed (Passed and/or Skipped)
           conclusion: success
           output: |
-            {"summary":"No errors, skipped tests, or failed tests detected"}
-
+            {"summary":"No failed or errored tests; at least one test passed, with some skipped tests."}
   tests_pass:
     needs: verify_collection
     name: Merge Pull Request

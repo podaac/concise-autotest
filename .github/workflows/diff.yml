@@ -14,8 +14,8 @@ jobs:
     name: Find new associations
     runs-on: ubuntu-latest
     outputs:
-      new_uat_associations: ${{ steps.diff.outputs.new_uat_associations }}
-      new_ops_associations: ${{ steps.diff.outputs.new_ops_associations }}
+      new_uat_associations: ${{ steps.diff_uat.outputs.new_uat_associations }}
+      new_ops_associations: ${{ steps.diff_ops.outputs.new_ops_associations }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -25,24 +25,29 @@ jobs:
         uses: abatilo/actions-poetry@v3
         with:
           poetry-version: 1.5.1
-      - name: Run diff
-        id: diff
-        env:
-          UAT_TOKEN_TEMP: ${{ secrets.LAUNCHPAD_TOKEN_UAT }}
-          OPS_TOKEN_TEMP: ${{ secrets.LAUNCHPAD_TOKEN_OPS }}
+      - name: Install concise-autotest
         run: |
           poetry install
-
-          ls $GITHUB_WORKSPACE/tests/cmr/concise/uat/ > uat_associations.txt
-          ls $GITHUB_WORKSPACE/tests/cmr/concise/ops/ > ops_associations.txt
-
-          poetry run cmr_association_diff -e uat -t service -p POCLOUD -n 'PODAAC Concise' -a uat_associations.txt --token $UAT_TOKEN_TEMP > new_uat_associations.txt
-          poetry run cmr_association_diff -e ops -t service -p POCLOUD -n 'PODAAC Concise' -a ops_associations.txt --token $OPS_TOKEN_TEMP > new_ops_associations.txt
-
-          echo "new_uat_associations=$(poetry run python tests/collection_names.py --env uat --token $UAT_TOKEN_TEMP --file new_uat_associations.txt)" >> $GITHUB_OUTPUT
-          echo "new_ops_associations=$(poetry run python tests/collection_names.py --env ops --token $OPS_TOKEN_TEMP --file new_ops_associations.txt)" >> $GITHUB_OUTPUT
-
-          rm *_associations.txt
+      - name: Run diff in UAT
+        id: diff_uat
+        env:
+          UAT_TOKEN_TEMP: ${{ secrets.LAUNCHPAD_TOKEN_UAT }}
+        run: |
+          ls $GITHUB_WORKSPACE/tests/cmr/concise/uat/ > $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt
+          poetry run cmr_association_diff -e uat -t service -p POCLOUD -n 'PODAAC Concise' -a $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt --token $UAT_TOKEN_TEMP > $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt
+          echo "new_uat_associations=$(poetry run python tests/collection_names.py --env uat --token $UAT_TOKEN_TEMP --file $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt)" >> $GITHUB_OUTPUT
+          rm $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt
+          rm $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt
+      - name: Run diff in OPS
+        id: diff_ops
+        env:
+          OPS_TOKEN_TEMP: ${{ secrets.LAUNCHPAD_TOKEN_OPS }}
+        run: |
+          ls $GITHUB_WORKSPACE/tests/cmr/concise/ops/ > $GITHUB_WORKSPACE/tests/cmr/concise/ops_associations.txt
+          poetry run cmr_association_diff -e ops -t service -p POCLOUD -n 'PODAAC Concise' -a $GITHUB_WORKSPACE/tests/cmr/concise/ops_associations.txt --token $OPS_TOKEN_TEMP > $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt
+          echo "new_ops_associations=$(poetry run python tests/collection_names.py --env ops --token $OPS_TOKEN_TEMP --file $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt)" >> $GITHUB_OUTPUT
+          rm $GITHUB_WORKSPACE/tests/cmr/concise/ops_associations.txt
+          rm $GITHUB_WORKSPACE/tests/cmr/concise/new_ops_associations.txt
   open_pr_uat:
     needs: find_new
     strategy:

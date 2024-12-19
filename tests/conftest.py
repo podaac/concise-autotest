@@ -2,6 +2,11 @@ import os
 import pathlib
 import json
 import pytest
+import re
+import create_or_update_issue
+from groq import Groq
+import time
+import re
 
 try:
     os.environ['CMR_USER']
@@ -69,19 +74,68 @@ def log_global_env_facts(record_testsuite_property, request):
     record_testsuite_property("env", request.config.getoption('env'))
 
 
+def get_error_message(report):
+
+    # If it's a regular test failure (not a skipped or xfailed test)
+    if hasattr(report, 'longreprtext'):
+        # Extract the short-form failure reason (in pytest >= 6)
+        error_message = report.longreprtext
+    else:
+        # Fallback if longreprtext is not available
+        if isinstance(report.longrepr, tuple):
+            error_message = report.longrepr[2]
+        else:
+            error_message = str(report.longrepr)
+
+    pattern = r"bearer_token = '.*?'"
+    cleaned_text = re.sub(pattern, "", error_message)
+    
+    return cleaned_text
+
+
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
 
-    success, skipped, failed = [], [], []
-    test_results = {'success': success, 'failed': failed, 'skipped': skipped}
+    failed = []
+    failed_tests = terminalreporter.stats.get('failed', [])
+    error_tests = terminalreporter.stats.get('error', [])
 
-    # the fourth keyword is the collection concept id may change if we change the test inputs
-    skipped.extend([list(skip.keywords)[3] for skip in terminalreporter.stats.get('skipped', [])])
-    failed.extend([list(failed.keywords)[3] for failed in terminalreporter.stats.get('failed', [])])
-    success.extend([list(passed.keywords)[3] for passed in terminalreporter.stats.get('passed', [])])
+    all_failed_test = failed_tests + error_tests
+
+    if all_failed_test:
+        for report in all_failed_test:
+
+            concept_id = list(report.keywords)[3]
+
+            # Extract the test name and exception message from the report
+            test_name = report.nodeid
+            test_type = None
+
+            if "spatial" in test_name:
+                test_type = "spatial"
+            elif "temporal" in test_name:
+                test_type = "temporal"
+
+            try:
+                full_message = get_error_message(report)
+            except Exception:
+                full_message = "Unable to retrive error message"
+
+            print(type(full_message))
+            print(full_message)
+
+            failed.append({
+                "concept_id": concept_id,
+                "test_type": test_type,
+                "message": full_message
+            })
+
+    test_results = {
+        'failed': failed, 
+    }
 
     env = config.option.env
 
-    if config.option.regression:
+    if config.option.regression or True:
 
         file_path = f'{env}_regression_results.json'
         with open(file_path, 'w') as file:
@@ -94,7 +148,4 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
                 file_path = f'{env}_{outcome}.json'
                 with open(file_path, 'w') as file:
                     json.dump(tests, file)
-
-
-
 

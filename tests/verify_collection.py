@@ -46,7 +46,7 @@ def harmony_env(env):
 @pytest.fixture(scope="session")
 def request_session():
     with requests.Session() as s:
-        s.headers.update({'User-agent': 'l2ss-py-autotest'})
+        s.headers.update({'User-agent': 'concise-autotest'})
         yield s
 
 

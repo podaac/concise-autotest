@@ -48,7 +48,7 @@ jobs:
       - name: Run diff in UAT
         id: diff_uat
         env:
-          UAT_TOKEN_TEMP: ${{ steps.ops_token.outputs.result }}
+          UAT_TOKEN_TEMP: ${{ steps.uat_token.outputs.result }}
         run: |
           ls $GITHUB_WORKSPACE/tests/cmr/concise/uat/ > $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt
           poetry run cmr_association_diff -e uat -t service -p POCLOUD -n 'PODAAC Concise' -a $GITHUB_WORKSPACE/tests/cmr/concise/uat_associations.txt --token $UAT_TOKEN_TEMP > $GITHUB_WORKSPACE/tests/cmr/concise/new_uat_associations.txt

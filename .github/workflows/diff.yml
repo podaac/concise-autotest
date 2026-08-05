@@ -17,14 +17,14 @@ jobs:
       new_uat_associations: ${{ steps.diff_uat.outputs.new_uat_associations }}
       new_ops_associations: ${{ steps.diff_ops.outputs.new_ops_associations }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Install Poetry
-        uses: abatilo/actions-poetry@v3
+        uses: abatilo/actions-poetry@v4
         with:
-          poetry-version: 2.1.3
+          poetry-version: 2.3.2
 
       - name: Get OPS token
         id: ops_token
@@ -81,7 +81,7 @@ jobs:
         with:
           app_id: ${{ secrets.CICD_APP_ID }}
           private_key: ${{ secrets.CICD_APP_PRIVATE_KEY }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Update uat_associations
         run: |
           mkdir -p $GITHUB_WORKSPACE/tests/cmr/concise/uat
@@ -125,7 +125,7 @@ jobs:
         with:
           app_id: ${{ secrets.CICD_APP_ID }}
           private_key: ${{ secrets.CICD_APP_PRIVATE_KEY }}
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Update ops_associations
         run: |
           mkdir -p $GITHUB_WORKSPACE/tests/cmr/concise/ops

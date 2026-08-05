@@ -19,16 +19,16 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
   
-    - uses: actions/setup-python@v5
+    - uses: actions/setup-python@v7
       with:
         python-version: "3.12"
 
     - name: Install Poetry
-      uses: abatilo/actions-poetry@v3
+      uses: abatilo/actions-poetry@v4
       with:
-        poetry-version: 2.1.3
+        poetry-version: 2.3.2
 
     - name: Poetry Install
       run: |
@@ -66,7 +66,7 @@ jobs:
         files: test-results/${{ matrix.environment }}_test_report.xml
 
     - name: Archive test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ matrix.environment }}-test-results
         path: tests/${{ matrix.environment }}_regression_results.json
